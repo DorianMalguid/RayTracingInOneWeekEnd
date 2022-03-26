@@ -31,7 +31,7 @@ const int NB_THREADS = 10;
 RandomGen* rdgen = RandomGen::getInstance();
 
 
-// Lance un rayon dans le monde, il peut rebondir jusqu’à depth fois
+// Lance un rayon dans le monde, il peut rebondir jusquï¿½ï¿½ depth fois
 Vec3 rayColour(const Ray& ray, Hitable* world, int depth) {
     hit_record record;
     if (world->hit(ray, 0.001f, FLT_MAX, record)) {
@@ -52,7 +52,7 @@ Vec3 rayColour(const Ray& ray, Hitable* world, int depth) {
 }
 
 
-// Génère une scène aléatoire avec des boules composées des trois matériaux différents
+// Gï¿½nï¿½re une scï¿½ne alï¿½atoire avec des boules composï¿½es des trois matï¿½riaux diffï¿½rents
 Hitable* random_scene() {
     int n = 300;
     Hitable** list = new Hitable *[n + 1];
@@ -87,7 +87,7 @@ Hitable* random_scene() {
 }
 
 
-// Lance les rayons dans le monde et agrège les résultats dans le tableau colour_buf
+// Lance les rayons dans le monde et agrï¿½ge les rï¿½sultats dans le tableau colour_buf
 void ray_cast(Hitable* world, float* colour_buf, Camera camera) {
     int position = 0;
     int J;
@@ -113,7 +113,7 @@ void ray_cast(Hitable* world, float* colour_buf, Camera camera) {
 }
 
 
-// Écriture du fichier image
+// ï¿½criture du fichier image
 void write_image_file(float* colour_buf, int nb_col) {
     ofstream out("image.ppm");
     streambuf* console_buf = cout.rdbuf();
@@ -132,8 +132,8 @@ void write_image_file(float* colour_buf, int nb_col) {
         int ig = int(255.99 * sqrt(colour_buf[i++] / (NB_THREADS * RAYS_PER_PIXEL)));
         int ib = int(255.99 * sqrt(colour_buf[i++] / (NB_THREADS * RAYS_PER_PIXEL)));
 
-        // Parfois des pixels sont corrompus (~1/100 000) donc dans ce cas on reprend la valeur précédente
-        // pour pouvoir ouvrir l’image quand même
+        // Parfois des pixels sont corrompus (~1/100 000) donc dans ce cas on reprend la valeur prï¿½cï¿½dente
+        // pour pouvoir ouvrir lï¿½image quand mï¿½me
         if (ir < 0 || ir > 255 || ig < 0 || ig > 255 || ib < 0 || ib > 255) {
             ir = pr;
             ig = pg;
@@ -147,7 +147,7 @@ void write_image_file(float* colour_buf, int nb_col) {
 
     out.close();
     cout.rdbuf(console_buf);
-    cout << px_corrompus << " pixels corrompus réécrits" << endl;
+    cout << px_corrompus << " pixels corrompus rï¿½ï¿½crits" << endl;
 }
 
 
@@ -158,8 +158,8 @@ int main()
     milliseconds startTime, stopTime;
 
 
-    // Génération de la scène
-    cout << "Génération de la scène" << endl;
+    // Gï¿½nï¿½ration de la scï¿½ne
+    cout << "Gï¿½nï¿½ration de la scï¿½ne" << endl;
     startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
     Hitable* world = random_scene();
@@ -168,7 +168,7 @@ int main()
     cout << "Fini en " << float(stopTime.count() - startTime.count()) / 1000 << "s" << endl << endl;
 
 
-    // Caméra
+    // Camï¿½ra
     Vec3 lookfrom(13, 2, 3);
     Vec3 lookat(0, 0, 0);
     float dist_to_focus = 10.0;
@@ -177,12 +177,13 @@ int main()
     Camera camera(lookfrom, lookat, Vec3(0, 1, 0), 20, float(IMAGE_WIDTH) / float(IMAGE_HEIGHT), aperture, dist_to_focus);
 
 
-    // On initialise un tableau de flottants dans lequel les threads pourront actualiser les couleurs calculées
+    // On initialise un tableau de flottants dans lequel les threads pourront actualiser les couleurs calculï¿½es
     cout << "Initialisation buffer image" << endl;
     startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
-    float* colours = new float[3 * IMAGE_WIDTH * IMAGE_HEIGHT];
-    for (int i = 0; i < 3 * IMAGE_WIDTH * IMAGE_HEIGHT; i++)
+    int nbColoursTot = 3 * IMAGE_WIDTH * IMAGE_WIDTH;
+    float* colours = new float[nbColoursTot];
+    for (int i = 0; i < nbColoursTot; i++)
     {
         colours[i] = 0;
     }
@@ -193,30 +194,31 @@ int main()
 
 
     // Lancer de rayons
-    cout << "Rendu de la scène" << endl;
+    cout << "Rendu de la scï¿½ne" << endl;
     startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
     vector<thread> threads;
     for (int i = 0; i < NB_THREADS; i++)
     {
+        // On lance les threads
         threads.emplace_back(ray_cast, world, colours, camera);
     }
-    for (auto &th : threads)
+    for (thread &th : threads)
     {
+        // On attend que les threads soient finis avant de poursuivre
         th.join();
     }
-    //ray_cast(world, colours, camera);
 
     stopTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     cout << "Fini en " << float(stopTime.count() - startTime.count()) / 1000 << "s" << endl << endl;
 
 
 
-    // Écriture du fichier ppm
-    cout << "Écriture de l’image" << endl;
+    // ï¿½criture du fichier ppm
+    cout << "ï¿½criture de lï¿½image" << endl;
     startTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
-    write_image_file(colours, 3 * IMAGE_WIDTH * IMAGE_HEIGHT);
+    write_image_file(colours, nbColoursTot);
 
     stopTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     cout << "Fini en " << float(stopTime.count() - startTime.count()) / 1000 << "s" << endl << endl;
